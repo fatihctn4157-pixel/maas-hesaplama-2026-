@@ -1,0 +1,16 @@
+
+{
+  "name": "2026 Maaş Hesaplama",
+  "short_name": "Maaş2026",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#1f6feb",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
