@@ -10,115 +10,234 @@
 
 <style>
 body{
-    font-family: Arial, sans-serif;
-    background:#0f172a;
-    color:#f1f5f9;
-    padding:20px;
+margin:0;
+font-family:Arial, sans-serif;
+background:#0f172a;
+color:#e2e8f0;
 }
+
 .container{
-    max-width:600px;
-    margin:auto;
+max-width:1100px;
+margin:auto;
+padding:20px;
 }
+
 h1{
-    text-align:center;
+text-align:center;
+margin-bottom:20px;
 }
-input,button{
-    width:100%;
-    padding:12px;
-    margin:8px 0;
-    border-radius:8px;
-    border:none;
-    font-size:16px;
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+box-shadow:0 4px 15px rgba(0,0,0,0.3);
 }
+
 input{
-    background:#1e293b;
-    color:white;
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:8px;
+border:none;
+font-size:16px;
 }
+
 button{
-    background:#2563eb;
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
+width:100%;
+padding:12px;
+background:#2563eb;
+border:none;
+color:white;
+border-radius:8px;
+font-size:16px;
+cursor:pointer;
+margin-top:10px;
 }
+
 button:hover{
-    background:#1d4ed8;
+background:#1d4ed8;
 }
-.result-box{
-    background:#1e293b;
-    padding:15px;
-    margin-top:15px;
-    border-radius:10px;
+
+.summary{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:15px;
+margin-top:20px;
 }
+
+.summary-box{
+background:#111827;
+padding:15px;
+border-radius:10px;
+border-left:4px solid #2563eb;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+font-size:14px;
+}
+
+th,td{
+padding:8px;
+border:1px solid #334155;
+text-align:right;
+}
+
+th{
+background:#1e293b;
+}
+
+td:first-child, th:first-child{
+text-align:left;
+}
+
 .install-btn{
-    background:#16a34a;
-    display:none;
+position:fixed;
+bottom:20px;
+right:20px;
+background:#16a34a;
+padding:12px 18px;
+border-radius:30px;
+color:white;
+display:none;
 }
 </style>
 </head>
 
 <body>
 <div class="container">
-<h1>2026 Maaş Hesaplama</h1>
 
-<input id="saatUcret" type="number" placeholder="Saat Ücreti (Net)">
-<input id="martEnf" type="number" placeholder="Mart Enflasyon %">
-<input id="eylulEnf" type="number" placeholder="Eylül Enflasyon %">
+<h1>2026 Kurumsal Bordro Sistemi</h1>
 
-<button onclick="hesapla()">Hesapla</button>
-<button id="installBtn" class="install-btn">📲 Uygulamayı Yükle</button>
+<div class="card">
+<label>Net Saat Ücreti</label>
+<input type="number" id="netSaat" placeholder="Örn: 301.87">
 
-<div id="sonuc"></div>
+<label>Mart Zam (%)</label>
+<input type="number" id="martZam" placeholder="Örn: 15">
+
+<label>Eylül Zam (%)</label>
+<input type="number" id="eylulZam" placeholder="Örn: 10">
+
+<button onclick="hesapla()">HESAPLA</button>
 </div>
 
+<div id="ozet"></div>
+<div id="bordro"></div>
+
+</div>
+
+<button class="install-btn" id="installBtn">📲 Uygulamayı Yükle</button>
+
 <script>
-function hesapla(){
-    const saatNet = parseFloat(document.getElementById("saatUcret").value) || 0;
-    const martEnf = parseFloat(document.getElementById("martEnf").value) || 0;
-    const eylulEnf = parseFloat(document.getElementById("eylulEnf").value) || 0;
+let deferredPrompt;
 
-    const aylikSaat = 225;
+window.addEventListener('beforeinstallprompt', (e)=>{
+e.preventDefault();
+deferredPrompt = e;
+document.getElementById('installBtn').style.display="block";
+});
 
-    const ilkAylik = saatNet * aylikSaat;
-    const martSaat = saatNet * (1 + martEnf/100);
-    const martAylik = martSaat * aylikSaat;
-    const eylulSaat = martSaat * (1 + eylulEnf/100);
-    const eylulAylik = eylulSaat * aylikSaat;
+document.getElementById('installBtn').addEventListener('click', ()=>{
+deferredPrompt.prompt();
+});
 
-    document.getElementById("sonuc").innerHTML = `
-        <div class="result-box">
-            <h3>Başlangıç Aylık Net</h3>
-            <p>${ilkAylik.toFixed(2)} TL</p>
-        </div>
-        <div class="result-box">
-            <h3>Mart Enflasyon Sonrası</h3>
-            <p>Saat: ${martSaat.toFixed(2)} TL</p>
-            <p>Aylık: ${martAylik.toFixed(2)} TL</p>
-        </div>
-        <div class="result-box">
-            <h3>Eylül Enflasyon Sonrası</h3>
-            <p>Saat: ${eylulSaat.toFixed(2)} TL</p>
-            <p>Aylık: ${eylulAylik.toFixed(2)} TL</p>
-        </div>
-    `;
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('service-worker.js');
 }
 
-// PWA Install
-let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
+function tl(x){
+return x.toLocaleString('tr-TR',{minimumFractionDigits:2})+" TL";
+}
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'block';
-});
+function hesapla(){
 
-installBtn.addEventListener('click', () => {
-    installBtn.style.display = 'none';
-    deferredPrompt.prompt();
-});
+let netSaat = parseFloat(document.getElementById("netSaat").value);
+let martZam = parseFloat(document.getElementById("martZam").value)/100;
+let eylulZam = parseFloat(document.getElementById("eylulZam").value)/100;
 
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js');
+let aylikSaat = 225;
+
+let ocakNet = netSaat * aylikSaat;
+let martNetSaat = netSaat * (1+martZam);
+let martNet = martNetSaat * aylikSaat;
+let eylulNetSaat = martNetSaat * (1+eylulZam);
+let eylulNet = eylulNetSaat * aylikSaat;
+
+let ozetHTML = `
+<div class="summary">
+<div class="summary-box">
+<h3>Başlangıç</h3>
+Saat: ${tl(netSaat)}<br>
+Aylık Net: ${tl(ocakNet)}<br>
+%40 Avans: ${tl(ocakNet*0.40)}
+</div>
+
+<div class="summary-box">
+<h3>Mart Zamlı</h3>
+Saat: ${tl(martNetSaat)}<br>
+Aylık Net: ${tl(martNet)}<br>
+%40 Avans: ${tl(martNet*0.40)}
+</div>
+
+<div class="summary-box">
+<h3>Eylül Zamlı</h3>
+Saat: ${tl(eylulNetSaat)}<br>
+Aylık Net: ${tl(eylulNet)}<br>
+%40 Avans: ${tl(eylulNet*0.40)}
+</div>
+</div>
+`;
+
+document.getElementById("ozet").innerHTML = ozetHTML;
+
+let aylar=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+
+let tablo="<div class='card'><h3>2026 Detaylı Bordro</h3><table><tr><th>Ay</th><th>Brüt</th><th>SGK</th><th>İşsizlik</th><th>Gelir Vergisi</th><th>Damga</th><th>Net</th></tr>";
+
+let kumulatif=0;
+
+for(let i=0;i<12;i++){
+
+let aktifNetSaat = netSaat;
+if(i>=2) aktifNetSaat = martNetSaat;
+if(i>=8) aktifNetSaat = eylulNetSaat;
+
+let brut = aktifNetSaat*1.33*aylikSaat;
+let sgk = brut*0.14;
+let issizlik = brut*0.01;
+
+kumulatif += brut-sgk-issizlik;
+
+let gvOran=0.15;
+if(kumulatif>5300000) gvOran=0.40;
+else if(kumulatif>1500000) gvOran=0.35;
+else if(kumulatif>400000) gvOran=0.27;
+else if(kumulatif>190000) gvOran=0.20;
+
+let gv = (brut-sgk-issizlik)*gvOran;
+let damga = brut*0.00759;
+let net = brut-sgk-issizlik-gv-damga;
+
+tablo+=`<tr>
+<td>${aylar[i]}</td>
+<td>${tl(brut)}</td>
+<td>${tl(sgk)}</td>
+<td>${tl(issizlik)}</td>
+<td>${tl(gv)}</td>
+<td>${tl(damga)}</td>
+<td>${tl(net)}</td>
+</tr>`;
+}
+
+tablo+="</table></div>";
+
+document.getElementById("bordro").innerHTML = tablo;
+
 }
 </script>
 
