@@ -1,100 +1,42 @@
-
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026 Maaş Hesaplama</title>
-<link rel="manifest" href="manifest.json">
-<style>
-body { background:#121212; color:#fff; font-family:Arial; padding:20px; }
-input, button { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:none; }
-button { background:#1f6feb; color:white; font-weight:bold; }
-table { width:100%; margin-top:20px; border-collapse:collapse; font-size:12px; }
-th, td { border:1px solid #333; padding:6px; text-align:center; }
-th { background:#1f1f1f; }
-</style>
-</head>
-<body>
-
-<h2>2026 Maaş Hesaplama</h2>
-
-<label>Saat Ücreti (Net)</label>
-<input type="number" id="saat" placeholder="Saat ücreti gir">
-
-<label>Mart Enflasyon %</label>
-<input type="number" id="martEnf" placeholder="Örn: 5">
-
-<label>Eylül Enflasyon %</label>
-<input type="number" id="eylulEnf" placeholder="Örn: 10">
-
-<button onclick="hesapla()">Hesapla</button>
-
-<h3 id="netSonuc"></h3>
-<h3 id="brutSonuc"></h3>
-
-<div id="tablo"></div>
-
 <script>
-function gelirVergisiHesapla(kumulatif) {
-if(kumulatif <= 190000) return 0.15;
-if(kumulatif <= 400000) return 0.20;
-if(kumulatif <= 1500000) return 0.27;
-if(kumulatif <= 5300000) return 0.35;
-return 0.40;
-}
+function hesapla() {
 
-function hesapla(){
-let saat = parseFloat(document.getElementById("saat").value);
-let martEnf = parseFloat(document.getElementById("martEnf").value)||0;
-let eylulEnf = parseFloat(document.getElementById("eylulEnf").value)||0;
+    const saatNet = parseFloat(document.getElementById("saatUcret").value);
+    const martEnf = parseFloat(document.getElementById("martEnf").value) || 0;
+    const eylulEnf = parseFloat(document.getElementById("eylulEnf").value) || 0;
 
-let netAylik = saat * 225;
-document.getElementById("netSonuc").innerText = "Aylık Net: " + netAylik.toFixed(2) + " TL";
+    const saatAylik = 225; // Ortalama aylık saat
 
-let brut = netAylik / 0.75;
-document.getElementById("brutSonuc").innerText = "Tahmini Brüt: " + brut.toFixed(2) + " TL";
+    // 1️⃣ İlk net aylık
+    const ilkAylikNet = saatNet * saatAylik;
 
-let kumulatif = 0;
-let tabloHTML = "<table><tr><th>Ay</th><th>Brüt</th><th>SGK</th><th>İşsizlik</th><th>Damga</th><th>Gelir Vergisi</th><th>Net</th></tr>";
+    // 2️⃣ Mart sonrası saat ücreti
+    const martSaat = saatNet * (1 + martEnf / 100);
+    const martAylikNet = martSaat * saatAylik;
 
-let aylar = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+    // 3️⃣ Eylül sonrası saat ücreti (Mart üzerinden artışlı)
+    const eylulSaat = martSaat * (1 + eylulEnf / 100);
+    const eylulAylikNet = eylulSaat * saatAylik;
 
-for(let i=0;i<12;i++){
-let ayBrut = brut;
+    document.getElementById("sonuc").innerHTML = `
+        <div class="sonuc-kutu">
+            <h3>Başlangıç Aylık Net</h3>
+            <p>${ilkAylikNet.toFixed(2)} TL</p>
+        </div>
 
-if(i==2) ayBrut += ayBrut*(martEnf/100);
-if(i>=9) ayBrut += ayBrut*(eylulEnf/100);
+        <div class="sonuc-kutu">
+            <h3>Mart Enflasyon Sonrası Saat Ücreti</h3>
+            <p>${martSaat.toFixed(2)} TL</p>
+            <h4>Aylık Net:</h4>
+            <p>${martAylikNet.toFixed(2)} TL</p>
+        </div>
 
-let sgk = ayBrut*0.14;
-let issizlik = ayBrut*0.01;
-let damga = ayBrut*0.00759;
-
-kumulatif += ayBrut;
-let gvOran = gelirVergisiHesapla(kumulatif);
-let gelirVergisi = ayBrut*gvOran;
-
-let net = ayBrut - sgk - issizlik - damga - gelirVergisi;
-
-tabloHTML += `<tr>
-<td>${aylar[i]}</td>
-<td>${ayBrut.toFixed(0)}</td>
-<td>${sgk.toFixed(0)}</td>
-<td>${issizlik.toFixed(0)}</td>
-<td>${damga.toFixed(0)}</td>
-<td>${gelirVergisi.toFixed(0)}</td>
-<td>${net.toFixed(0)}</td>
-</tr>`;
-}
-
-tabloHTML += "</table>";
-document.getElementById("tablo").innerHTML = tabloHTML;
-}
-
-if('serviceWorker' in navigator){
-navigator.serviceWorker.register('sw.js');
+        <div class="sonuc-kutu">
+            <h3>Eylül Enflasyon Sonrası Saat Ücreti</h3>
+            <p>${eylulSaat.toFixed(2)} TL</p>
+            <h4>Aylık Net:</h4>
+            <p>${eylulAylikNet.toFixed(2)} TL</p>
+        </div>
+    `;
 }
 </script>
-
-</body>
-</html>
