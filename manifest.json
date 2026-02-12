@@ -1,14 +1,19 @@
-
 {
-  "name": "2026 Maaş Hesaplama",
-  "short_name": "Maaş2026",
-  "start_url": "index.html",
+  "name": "2026 Profesyonel Bordro",
+  "short_name": "Bordro",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#1f6feb",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "ikon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "ikon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
