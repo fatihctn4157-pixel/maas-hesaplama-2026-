@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 Profesyonel Bordro</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#0f172a;
+    color:#f1f5f9;
+    padding:20px;
+}
+.container{
+    max-width:600px;
+    margin:auto;
+}
+h1{
+    text-align:center;
+}
+input,button{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border-radius:8px;
+    border:none;
+    font-size:16px;
+}
+input{
+    background:#1e293b;
+    color:white;
+}
+button{
+    background:#2563eb;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+button:hover{
+    background:#1d4ed8;
+}
+.result-box{
+    background:#1e293b;
+    padding:15px;
+    margin-top:15px;
+    border-radius:10px;
+}
+.install-btn{
+    background:#16a34a;
+    display:none;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>2026 Maaş Hesaplama</h1>
+
+<input id="saatUcret" type="number" placeholder="Saat Ücreti (Net)">
+<input id="martEnf" type="number" placeholder="Mart Enflasyon %">
+<input id="eylulEnf" type="number" placeholder="Eylül Enflasyon %">
+
+<button onclick="hesapla()">Hesapla</button>
+<button id="installBtn" class="install-btn">📲 Uygulamayı Yükle</button>
+
+<div id="sonuc"></div>
+</div>
+
+<script>
+function hesapla(){
+    const saatNet = parseFloat(document.getElementById("saatUcret").value) || 0;
+    const martEnf = parseFloat(document.getElementById("martEnf").value) || 0;
+    const eylulEnf = parseFloat(document.getElementById("eylulEnf").value) || 0;
+
+    const aylikSaat = 225;
+
+    const ilkAylik = saatNet * aylikSaat;
+    const martSaat = saatNet * (1 + martEnf/100);
+    const martAylik = martSaat * aylikSaat;
+    const eylulSaat = martSaat * (1 + eylulEnf/100);
+    const eylulAylik = eylulSaat * aylikSaat;
+
+    document.getElementById("sonuc").innerHTML = `
+        <div class="result-box">
+            <h3>Başlangıç Aylık Net</h3>
+            <p>${ilkAylik.toFixed(2)} TL</p>
+        </div>
+        <div class="result-box">
+            <h3>Mart Enflasyon Sonrası</h3>
+            <p>Saat: ${martSaat.toFixed(2)} TL</p>
+            <p>Aylık: ${martAylik.toFixed(2)} TL</p>
+        </div>
+        <div class="result-box">
+            <h3>Eylül Enflasyon Sonrası</h3>
+            <p>Saat: ${eylulSaat.toFixed(2)} TL</p>
+            <p>Aylık: ${eylulAylik.toFixed(2)} TL</p>
+        </div>
+    `;
+}
+
+// PWA Install
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
+});
+
+installBtn.addEventListener('click', () => {
+    installBtn.style.display = 'none';
+    deferredPrompt.prompt();
+});
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+
+</body>
+</html>
