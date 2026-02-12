@@ -111,7 +111,7 @@ display:none;
 <body>
 <div class="container">
 
-<h1>2026 Kurumsal Bordro Sistemi</h1>
+<h1>2026 Bordro Sistemi</h1>
 
 <div class="card">
 <label>Net Saat Ücreti</label>
@@ -134,21 +134,6 @@ display:none;
 <button class="install-btn" id="installBtn">📲 Uygulamayı Yükle</button>
 
 <script>
-let deferredPrompt;
-
-window.addEventListener('beforeinstallprompt', (e)=>{
-e.preventDefault();
-deferredPrompt = e;
-document.getElementById('installBtn').style.display="block";
-});
-
-document.getElementById('installBtn').addEventListener('click', ()=>{
-deferredPrompt.prompt();
-});
-
-if('serviceWorker' in navigator){
-navigator.serviceWorker.register('service-worker.js');
-}
 
 function tl(x){
 return x.toLocaleString('tr-TR',{minimumFractionDigits:2})+" TL";
@@ -156,9 +141,14 @@ return x.toLocaleString('tr-TR',{minimumFractionDigits:2})+" TL";
 
 function hesapla(){
 
-let netSaat = parseFloat(document.getElementById("netSaat").value);
-let martZam = parseFloat(document.getElementById("martZam").value)/100;
-let eylulZam = parseFloat(document.getElementById("eylulZam").value)/100;
+let netSaat = parseFloat(document.getElementById("netSaat").value) || 0;
+let martZam = (parseFloat(document.getElementById("martZam").value) || 0) / 100;
+let eylulZam = (parseFloat(document.getElementById("eylulZam").value) || 0) / 100;
+
+if(netSaat <= 0){
+alert("Saat ücreti giriniz.");
+return;
+}
 
 let aylikSaat = 225;
 
@@ -168,7 +158,7 @@ let martNet = martNetSaat * aylikSaat;
 let eylulNetSaat = martNetSaat * (1+eylulZam);
 let eylulNet = eylulNetSaat * aylikSaat;
 
-let ozetHTML = `
+document.getElementById("ozet").innerHTML = `
 <div class="summary">
 <div class="summary-box">
 <h3>Başlangıç</h3>
@@ -193,13 +183,30 @@ Aylık Net: ${tl(eylulNet)}<br>
 </div>
 `;
 
-document.getElementById("ozet").innerHTML = ozetHTML;
-
 let aylar=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
 
 let tablo="<div class='card'><h3>2026 Detaylı Bordro</h3><table><tr><th>Ay</th><th>Brüt</th><th>SGK</th><th>İşsizlik</th><th>Gelir Vergisi</th><th>Damga</th><th>Net</th></tr>";
 
-let kumulatif=0;
+let kumulatifMatrah = 0;
+
+function gelirVergisiHesapla(matrah){
+let vergi = 0;
+
+if(matrah <= 190000){
+vergi = matrah * 0.15;
+}
+else if(matrah <= 400000){
+vergi = 190000*0.15 + (matrah-190000)*0.20;
+}
+else if(matrah <= 1500000){
+vergi = 190000*0.15 + (400000-190000)*0.20 + (matrah-400000)*0.27;
+}
+else{
+vergi = 190000*0.15 + (400000-190000)*0.20 + (1500000-400000)*0.27 + (matrah-1500000)*0.35;
+}
+
+return vergi;
+}
 
 for(let i=0;i<12;i++){
 
@@ -207,28 +214,25 @@ let aktifNetSaat = netSaat;
 if(i>=2) aktifNetSaat = martNetSaat;
 if(i>=8) aktifNetSaat = eylulNetSaat;
 
-let brut = aktifNetSaat*1.33*aylikSaat;
+let brut = aktifNetSaat * 1.33 * aylikSaat;
 let sgk = brut*0.14;
 let issizlik = brut*0.01;
+let matrah = brut - sgk - issizlik;
 
-kumulatif += brut-sgk-issizlik;
+let oncekiVergi = gelirVergisiHesapla(kumulatifMatrah);
+kumulatifMatrah += matrah;
+let yeniVergi = gelirVergisiHesapla(kumulatifMatrah);
+let gelirVergisi = yeniVergi - oncekiVergi;
 
-let gvOran=0.15;
-if(kumulatif>5300000) gvOran=0.40;
-else if(kumulatif>1500000) gvOran=0.35;
-else if(kumulatif>400000) gvOran=0.27;
-else if(kumulatif>190000) gvOran=0.20;
-
-let gv = (brut-sgk-issizlik)*gvOran;
 let damga = brut*0.00759;
-let net = brut-sgk-issizlik-gv-damga;
+let net = brut - sgk - issizlik - gelirVergisi - damga;
 
 tablo+=`<tr>
 <td>${aylar[i]}</td>
 <td>${tl(brut)}</td>
 <td>${tl(sgk)}</td>
 <td>${tl(issizlik)}</td>
-<td>${tl(gv)}</td>
+<td>${tl(gelirVergisi)}</td>
 <td>${tl(damga)}</td>
 <td>${tl(net)}</td>
 </tr>`;
@@ -237,9 +241,8 @@ tablo+=`<tr>
 tablo+="</table></div>";
 
 document.getElementById("bordro").innerHTML = tablo;
-
 }
-</script>
 
+</script>
 </body>
 </html>
